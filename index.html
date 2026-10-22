@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lexi – English ↔ Turkish flashcards</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#2f6b5c">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f3f6f2;--fg:#14231f;--card:#fff;--mut:#5d6f69;--line:#d5ded9;--acc:#2f6b5c;--again:#b5483a;--hard:#b7791f;--easy:#2f6b5c;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1a17;--fg:#e8f0ec;--card:#182622;--mut:#93a8a0;--line:#2a3b36;--acc:#5fb39d;--again:#e0705f;--hard:#e0a63f;--easy:#5fb39d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,sans-serif;padding:env(safe-area-inset-top) 0 calc(64px + env(safe-area-inset-bottom))}
+section{display:none;padding:12px 14px;max-width:640px;margin:auto}section.on{display:block}
+h2{font:600 20px Georgia,serif;margin:6px 0 10px}h3{margin:18px 0 6px;font-size:16px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;color:var(--mut);padding:10px 2px;font:13px system-ui}nav button.on{color:var(--acc);font-weight:700}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:3px 0}
+button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px}button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.row{display:flex;gap:8px;margin:8px 0}.row>*{flex:1}.row3{display:flex;gap:8px;margin:12px 0}.row3 button{flex:1;padding:16px 0;font-weight:700;color:#fff;border:0}
+.again{background:var(--again)}.hard{background:var(--hard)}.easy{background:var(--easy)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 18px;min-height:240px;text-align:center;cursor:pointer;display:flex;flex-direction:column;justify-content:center}
+.big{font:600 32px/1.2 Georgia,serif;overflow-wrap:anywhere}.big2{font:600 26px/1.2 Georgia,serif;color:var(--acc);overflow-wrap:anywhere}
+small,.hint,.meta{color:var(--mut);font-size:13px}.ex{margin:10px 0 0}hr{width:60%;border:0;border-top:1px solid var(--line)}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}.w{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.bars{display:flex;gap:6px;align-items:flex-end;height:90px}.bars div{flex:1;background:var(--acc);border-radius:4px 4px 0 0;min-height:2px;position:relative}.bars span{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:11px;color:var(--mut)}
+.k{display:grid;grid-template-columns:1fr 1fr;gap:8px}.k div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}.k b{display:block;font-size:24px}
+dialog{width:92%;max-width:520px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg)}label{font-size:13px;color:var(--mut)}
+</style></head><body>
+<section id="study" class="on"></section>
+<section id="words"><h2>Words</h2><input id="q" type="search" placeholder="Search English, Turkish or category"><div id="wl"></div></section>
+<section id="add"><h2>Add words</h2>
+<h3>Import from Google Translate</h3>
+<p class="meta">Choose the CSV exported from Google Sheets, or paste rows copied from the sheet. Duplicates are merged.</p>
+<input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain">
+<textarea id="paste" rows="4" placeholder="…or paste rows here (English, Turkish per row)"></textarea>
+<label><input type="checkbox" id="swap" style="width:auto"> Plain two-column file has Turkish first</label>
+<div class="row"><button class="p" id="imp">Import words</button></div><p id="msg" class="meta"></p>
+<h3>Add one word</h3>
+<input id="m_en" placeholder="English word or phrase"><input id="m_tr" placeholder="Turkish meaning"><input id="m_ex" placeholder="Example sentence (optional)"><input id="m_exTr" placeholder="Turkish translation of example"><input id="m_cat" placeholder="Category (optional)">
+<div class="row"><button class="p" id="addone">Add word</button></div></section>
+<section id="stats"></section>
+<section id="set"><h2>Settings</h2>
+<label>New words per day</label><input type="number" min="0" max="200" data-s="daily">
+<label>Speech speed</label><input type="range" min="0.5" max="1.2" step="0.1" data-s="rate">
+<label><input type="checkbox" data-s="auto" style="width:auto"> Say English word automatically</label>
+<div class="row"><button id="testv">🔊 Test voice</button></div><p id="vinfo" class="meta"></p>
+<h3>Daily reminder</h3><input type="time" id="rt" value="19:00"><div class="row"><button id="rem">Add to calendar</button></div>
+<h3>Backup</h3><div class="row"><button id="bk">Backup (.json)</button><button id="csvx">Export CSV</button></div>
+<label>Restore from backup</label><input type="file" id="rs" accept=".json,application/json">
+<h3>Danger zone</h3><div class="row"><button id="reset">Delete all words and progress</button></div></section>
+<dialog id="dlg"><h3 style="margin-top:0">Edit word</h3><label>English</label><input id="e_en"><label>Turkish</label><input id="e_tr"><label>Example</label><input id="e_ex"><label>Example in Turkish</label><input id="e_exTr"><label>Category</label><input id="e_cat">
+<div class="row"><button class="p" id="sv">Save</button><button id="del">Delete</button><button id="cx">Cancel</button></div></dialog>
+<nav><button data-v="study" class="on">Study</button><button data-v="words">Words</button><button data-v="add">Add</button><button data-v="stats">Progress</button><button data-v="set">Settings</button></nav>
+<script src="app.js"></script></body></html>
