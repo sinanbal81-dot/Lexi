@@ -28,7 +28,7 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='3';
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='4';
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
@@ -38,7 +38,10 @@ Q=s.mode=='daily'?[...L.filter(c=>c.reps&&c.due<=n).sort((a,b)=>a.ease-b.ease),.
 function show(e){cur=e?e.c:null;rev=e?e.rev:false;flip=false;view();if(cur){getPh(cur);if(!rev&&S.set.auto&&$('#study').classList.contains('on'))say(cur.en)}}
 function next(){if(hi<H.length-1){hi++;return show(H[hi])}const c=Q.shift();if(!c)return show(null);const e={c,rev:S.set.dir=='tr'||(S.set.dir=='mix'&&Math.random()<.5)};H.push(e);if(H.length>50)H.shift();hi=H.length-1;show(e)}
 function prev(){const i=cur?hi-1:hi;if(i<0)return;hi=i;show(H[hi])}
-async function phWord(w){const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(r.status==404)return'';if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();for(const e of j){let t=e.phonetic||'';if(!t)for(const p of e.phonetics||[])if(p.text){t=p.text;break}if(t)return t.replace(/^\/|\/$/g,'')}return''}
+async function phWiki(w){const r=await fetch('https://en.wiktionary.org/w/api.php?action=parse&prop=wikitext&format=json&redirects=1&origin=*&page='+encodeURIComponent(w.toLowerCase()));if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.error)return'';const t=j.parse&&j.parse.wikitext&&j.parse.wikitext['*']||'',m=[...t.matchAll(/\{\{IPA\|en\|([^}]*)\}\}/g)];
+if(!m.length)return'';const pick=m.find(x=>/US|General American/.test(t.slice(Math.max(0,x.index-60),x.index)))||m[0];const p=pick[1].split('|').find(x=>/^\s*[\/\[]/.test(x));return p?p.trim().replace(/^[\/\[]|[\/\]]$/g,''):''}
+async function phDict(w){const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();for(const e of j){let t=e.phonetic||'';if(!t)for(const p of e.phonetics||[])if(p.text){t=p.text;break}if(t)return t.replace(/^\/|\/$/g,'')}return''}
+async function phWord(w){const t=await phWiki(w);if(t)return t;try{return await phDict(w)}catch(e){return''}}
 async function getPh(c){if(c.ph!==undefined||tried.has(c.id))return;tried.add(c.id);const ws=c.en.replace(/[^\p{L}'’\- ]/gu,' ').split(' ').filter(Boolean);if(!ws.length||ws.length>4)return;
 try{const p=await Promise.all(ws.map(phWord));if(p.every(Boolean)){c.ph='/'+p.join(' ')+'/';save();if(cur===c)view()}}catch(e){lastErr=String(e&&e.message||e)}}
 const sel=(k,arr,v)=>`<select data-s="${k}">${arr.map(([a,b])=>`<option value="${esc(a)}"${a==v?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
