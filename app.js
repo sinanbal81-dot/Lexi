@@ -28,21 +28,27 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false;
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
 function build(){const s=S.set,n=now(),L=S.cards.filter(c=>!s.cat||c.cat===s.cat),nw=L.filter(c=>!c.reps);
 Q=s.mode=='daily'?[...L.filter(c=>c.reps&&c.due<=n).sort((a,b)=>a.ease-b.ease),...nw.slice(0,Math.max(0,s.daily-(S.log[day()]?.new||0)))]
-:s.mode=='new'?nw.slice(0,50):s.mode=='hard'?shuf(L.filter(c=>c.lapses||(c.reps&&c.ease<2.2))):s.mode=='fav'?shuf(L.filter(c=>c.fav)):shuf(L);next()}
-function next(){cur=Q.shift()||null;flip=false;rev=S.set.dir=='tr'||(S.set.dir=='mix'&&Math.random()<.5);view();if(cur&&!rev&&S.set.auto&&$('#study').classList.contains('on'))say(cur.en)}
+:s.mode=='new'?nw.slice(0,50):s.mode=='hard'?shuf(L.filter(c=>c.lapses||(c.reps&&c.ease<2.2))):s.mode=='fav'?shuf(L.filter(c=>c.fav)):shuf(L);H=[];hi=-1;cur=null;next()}
+function show(e){cur=e?e.c:null;rev=e?e.rev:false;flip=false;view();if(cur){getPh(cur);if(!rev&&S.set.auto&&$('#study').classList.contains('on'))say(cur.en)}}
+function next(){if(hi<H.length-1){hi++;return show(H[hi])}const c=Q.shift();if(!c)return show(null);const e={c,rev:S.set.dir=='tr'||(S.set.dir=='mix'&&Math.random()<.5)};H.push(e);if(H.length>50)H.shift();hi=H.length-1;show(e)}
+function prev(){const i=cur?hi-1:hi;if(i<0)return;hi=i;show(H[hi])}
+async function phWord(w){const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();for(const e of j){let t=e.phonetic||'';if(!t)for(const p of e.phonetics||[])if(p.text){t=p.text;break}if(t)return t.replace(/^\/|\/$/g,'')}return''}
+async function getPh(c){if(c.ph!==undefined||tried.has(c.id)||!navigator.onLine)return;tried.add(c.id);const ws=c.en.replace(/[^\p{L}'’\- ]/gu,' ').split(' ').filter(Boolean);if(!ws.length||ws.length>4)return;
+try{const p=await Promise.all(ws.map(phWord));if(p.every(Boolean)){c.ph='/'+p.join(' ')+'/';save();if(cur===c)view()}}catch(e){}}
 const sel=(k,arr,v)=>`<select data-s="${k}">${arr.map(([a,b])=>`<option value="${esc(a)}"${a==v?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
 function drawStudy(){const s=S.set,cats=[...new Set(S.cards.map(c=>c.cat).filter(Boolean))].sort(),due=S.cards.filter(c=>c.reps&&c.due<=now()).length;
 let h=`<div class="row">${sel('mode',[['daily','Daily review'],['new','New words'],['hard','Difficult words'],['all','All words'],['fav','Favourites']],s.mode)}${sel('dir',[['mix','Mixed'],['en','English first'],['tr','Turkish first']],s.dir)}${sel('cat',[['','All categories'],...cats.map(c=>[c,c])],s.cat)}</div>`;
 if(!S.cards.length)h+='<p class="empty">No words yet. Open Add to import your Google Translate list.</p>';
-else if(!cur)h+=`<p class="empty">All done for this set. Words due now: ${due}.<br>Try another mode above.</p>`;
+else if(!cur)h+=`<p class="empty">All done for this set. Words due now: ${due}.<br>Try another mode above.</p>${hi>=0?'<div class="row"><button data-nav="prev">‹ Previous</button></div>':''}`;
 else{const c=cur,f=rev?c.tr:c.en,b=rev?c.en:c.tr;
-h+=`<div class="card" id="card"><small>${rev?'Turkish → English':'English → Turkish'}, ${Q.length} more after this</small><div class="big">${esc(f)||'(empty)'}</div>${flip?`<hr><div class="big2">${esc(b)||'(no translation)'}</div>${c.ex?`<p class="ex">${esc(c.ex)}<br><i>${esc(c.exTr)}</i></p>`:`<p class="ex"><a target="_blank" rel="noopener" href="https://tatoeba.org/en/sentences/search?from=eng&to=tur&query=${encodeURIComponent(c.en)}">Find example sentences</a> or <a href="#" data-edit="${c.id}">add your own</a></p>`}`:'<p class="hint">Tap to reveal</p>'}</div>
+h+=`<div class="card" id="card"><small>${rev?'Turkish → English':'English → Turkish'}, ${Q.length} more after this</small><div class="big">${esc(f)||'(empty)'}</div>${!rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${flip?`<hr><div class="big2">${esc(b)||'(no translation)'}</div>${rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${c.ex?`<p class="ex">${esc(c.ex)}<br><i>${esc(c.exTr)}</i></p>`:`<p class="ex"><a target="_blank" rel="noopener" href="https://tatoeba.org/en/sentences/search?from=eng&to=tur&query=${encodeURIComponent(c.en)}">Find example sentences</a> or <a href="#" data-edit="${c.id}">add your own</a></p>`}`:'<p class="hint">Tap to reveal</p>'}</div>
+<div class="row"><button data-nav="prev"${hi>0?'':' disabled'}>‹ Previous</button><button data-nav="next">Next ›</button></div>
 <div class="row"><button id="spk">🔊 Listen</button><button data-fav="${c.id}">${c.fav?'★ Favourite':'☆ Favourite'}</button><button data-edit="${c.id}">✎ Edit</button></div>`;
 if(flip)h+='<div class="row3"><button class="again" data-r="again">Again</button><button class="hard" data-r="hard">Hard</button><button class="easy" data-r="easy">Easy</button></div>'}
 $('#study').innerHTML=h}
@@ -54,9 +60,10 @@ $('#stats').innerHTML=`<h2>Progress</h2><div class="k"><div><b>${t.n}</b>reviewe
 <h3>Last 7 days</h3><div class="bars" style="margin-bottom:24px">${days.map(d=>`<div style="height:${Math.max(3,100*(S.log[d[0]]?.n||0)/mx)}%"><span>${d[1]}</span></div>`).join('')}</div><p class="meta">Accuracy counts Hard and Easy as correct, Again as incorrect. ${C.length} words in total.</p>`}
 function tab(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==v));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==v));view()}
 function view(){const v=$('section.on').id;v=='study'?drawStudy():v=='words'?drawWords():v=='stats'?drawStats():0}
-let eid=null;function edit(id){const c=byId(id);if(!c)return;eid=id;for(const f of['en','tr','ex','exTr','cat'])$('#e_'+f).value=c[f];$('#dlg').showModal()}
-document.addEventListener('click',e=>{const el=e.target.closest('[data-r],[data-fav],[data-edit],[data-v],#card,#spk'),d=el&&el.dataset;if(!el)return;
+let eid=null;function edit(id){const c=byId(id);if(!c)return;eid=id;for(const f of['en','tr','ex','exTr','cat'])$('#e_'+f).value=c[f];$('#e_ph').value=c.ph||'';$('#dlg').showModal()}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-nav],[data-r],[data-fav],[data-edit],[data-v],#card,#spk'),d=el&&el.dataset;if(!el)return;
 if(d.v)return tab(d.v);
+if(d.nav)return d.nav=='prev'?prev():next();
 if(d.r){rate(cur,d.r);if(d.r=='again')Q.push(cur);return next()}
 if(d.fav){const c=byId(d.fav);c.fav^=1;save();return view()}
 if(d.edit){e.preventDefault();return edit(d.edit)}
@@ -64,7 +71,7 @@ if(el.id=='spk')return say(cur.en+(flip&&cur.ex?'. '+cur.ex:''));
 if(el.id=='card'&&!flip&&!e.target.closest('a')){flip=true;drawStudy();if(rev&&S.set.auto)say(cur.en)}});
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.s;if(!k)return;S.set[k]=t.type=='checkbox'?t.checked:(t.type=='number'||t.type=='range')?+t.value:t.value;save();if(['mode','dir','cat','daily'].includes(k))build()});
 $('#q').oninput=drawWords;
-$('#sv').onclick=()=>{const c=byId(eid);for(const f of['en','tr','ex','exTr','cat'])c[f]=nk($('#e_'+f).value);save();$('#dlg').close();view()};
+$('#sv').onclick=()=>{const c=byId(eid);for(const f of['en','tr','ex','exTr','cat'])c[f]=nk($('#e_'+f).value);const p=nk($('#e_ph').value);if(p)c.ph=p;else delete c.ph;save();$('#dlg').close();view()};
 $('#cx').onclick=()=>$('#dlg').close();
 $('#del').onclick=()=>{if(confirm('Delete this word?')){S.cards=S.cards.filter(c=>c.id!=eid);save();$('#dlg').close();build()}};
 $('#file').onchange=async e=>{const f=e.target.files[0];if(f)$('#paste').value=await f.text()};
@@ -80,3 +87,6 @@ $('#rs').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=J
 $('#reset').onclick=()=>{if(confirm('Delete ALL words and progress on this phone? Back up first.')&&confirm('Really delete everything?')){S.cards=[];S.log={};save();build()}};
 function init(){document.querySelectorAll('#set [data-s]').forEach(i=>{const v=S.set[i.dataset.s];i.type=='checkbox'?i.checked=v:i.value=v});build()}
 init();try{navigator.storage?.persist?.()}catch(e){}if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+$('#phall').onclick=async()=>{if(!navigator.onLine)return $('#phmsg').textContent='You are offline. Try again with internet.';const L=S.cards.filter(c=>c.ph===undefined),b=$('#phall');let i=0;b.disabled=true;
+const w=async()=>{while(i<L.length){const c=L[i++];tried.delete(c.id);await getPh(c);$('#phmsg').textContent=`Checked ${i} of ${L.length}…`}};await Promise.all([w(),w(),w()]);b.disabled=false;
+$('#phmsg').textContent=`Done. ${S.cards.filter(c=>c.ph).length} of ${S.cards.length} words have pronunciation. Words not in the dictionary are skipped; you can type them in via Edit.`};
