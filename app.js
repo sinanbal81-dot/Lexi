@@ -28,7 +28,7 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='4';
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='5';
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
@@ -83,10 +83,10 @@ const cs=toCards(csv(t),$('#swap').checked),r=add(cs);$('#msg').textContent=`Rea
 $('#addone').onclick=()=>{const o={};for(const f of['en','tr','ex','exTr','cat'])o[f]=$('#m_'+f).value;if(!nk(o.en))return;const r=add([o]);for(const f of['en','tr','ex','exTr','cat'])$('#m_'+f).value='';$('#msg').textContent=r.a?'Word added.':'That word already exists, so I filled any blanks.';build()};
 $('#testv').onclick=()=>{const v=say('G’day! This is your English voice.');$('#vinfo').textContent=v?'Using voice: '+v.name+' ('+v.lang+')':'No English voice found. Install one in Android Settings > General management > Text-to-speech.'};
 $('#rem').onclick=()=>{const[h,m]=$('#rt').value.split(':'),d=new Date(),p=n=>String(n).padStart(2,'0'),ds=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}T${p(h)}${p(m)}00`;
-dl('flashcards-reminder.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Lexi//EN','BEGIN:VEVENT','UID:lexi-daily@local','DTSTAMP:'+ds,'DTSTART:'+ds,'RRULE:FREQ=DAILY','SUMMARY:Vocabulary flashcards','BEGIN:VALARM','TRIGGER:PT0S','ACTION:DISPLAY','DESCRIPTION:Time for your words','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n'),'text/calendar')};
-$('#bk').onclick=()=>dl('lexi-backup-'+day()+'.json',JSON.stringify(S),'application/json');
-$('#csvx').onclick=()=>{const q=s=>'"'+String(s).replace(/"/g,'""')+'"';dl('lexi-words.csv','English,Turkish,Example,Example TR,Category\n'+S.cards.map(c=>[c.en,c.tr,c.ex,c.exTr,c.cat].map(q).join(',')).join('\n'),'text/csv')};
-$('#rs').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!Array.isArray(j.cards))throw 0;if(!confirm('Replace everything on this phone with the backup ('+j.cards.length+' words)?'))return;S.cards=j.cards;S.log=j.log||{};S.set={...S.set,...j.set};save();init();alert('Restored.')}catch(x){alert('That file is not a valid Lexi backup.')}e.target.value=''};
+dl('flashcards-reminder.ics',['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//baLexi//EN','BEGIN:VEVENT','UID:balexi-daily@local','DTSTAMP:'+ds,'DTSTART:'+ds,'RRULE:FREQ=DAILY','SUMMARY:Vocabulary flashcards','BEGIN:VALARM','TRIGGER:PT0S','ACTION:DISPLAY','DESCRIPTION:Time for your words','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n'),'text/calendar')};
+$('#bk').onclick=()=>dl('balexi-backup-'+day()+'.json',JSON.stringify(S),'application/json');
+$('#csvx').onclick=()=>{const q=s=>'"'+String(s).replace(/"/g,'""')+'"';dl('balexi-words.csv','English,Turkish,Example,Example TR,Category\n'+S.cards.map(c=>[c.en,c.tr,c.ex,c.exTr,c.cat].map(q).join(',')).join('\n'),'text/csv')};
+$('#rs').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!Array.isArray(j.cards))throw 0;if(!confirm('Replace everything on this phone with the backup ('+j.cards.length+' words)?'))return;S.cards=j.cards;S.log=j.log||{};S.set={...S.set,...j.set};save();init();alert('Restored.')}catch(x){alert('That file is not a valid baLexi backup.')}e.target.value=''};
 $('#reset').onclick=()=>{if(confirm('Delete ALL words and progress on this phone? Back up first.')&&confirm('Really delete everything?')){S.cards=[];S.log={};save();build()}};
 function init(){document.querySelectorAll('#set [data-s]').forEach(i=>{const v=S.set[i.dataset.s];i.type=='checkbox'?i.checked=v:i.value=v});build()}
 init();try{navigator.storage?.persist?.()}catch(e){}if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
