@@ -28,7 +28,7 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='3';
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
@@ -38,9 +38,9 @@ Q=s.mode=='daily'?[...L.filter(c=>c.reps&&c.due<=n).sort((a,b)=>a.ease-b.ease),.
 function show(e){cur=e?e.c:null;rev=e?e.rev:false;flip=false;view();if(cur){getPh(cur);if(!rev&&S.set.auto&&$('#study').classList.contains('on'))say(cur.en)}}
 function next(){if(hi<H.length-1){hi++;return show(H[hi])}const c=Q.shift();if(!c)return show(null);const e={c,rev:S.set.dir=='tr'||(S.set.dir=='mix'&&Math.random()<.5)};H.push(e);if(H.length>50)H.shift();hi=H.length-1;show(e)}
 function prev(){const i=cur?hi-1:hi;if(i<0)return;hi=i;show(H[hi])}
-async function phWord(w){const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();for(const e of j){let t=e.phonetic||'';if(!t)for(const p of e.phonetics||[])if(p.text){t=p.text;break}if(t)return t.replace(/^\/|\/$/g,'')}return''}
-async function getPh(c){if(c.ph!==undefined||tried.has(c.id)||!navigator.onLine)return;tried.add(c.id);const ws=c.en.replace(/[^\p{L}'’\- ]/gu,' ').split(' ').filter(Boolean);if(!ws.length||ws.length>4)return;
-try{const p=await Promise.all(ws.map(phWord));if(p.every(Boolean)){c.ph='/'+p.join(' ')+'/';save();if(cur===c)view()}}catch(e){}}
+async function phWord(w){const r=await fetch('https://api.dictionaryapi.dev/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(r.status==404)return'';if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();for(const e of j){let t=e.phonetic||'';if(!t)for(const p of e.phonetics||[])if(p.text){t=p.text;break}if(t)return t.replace(/^\/|\/$/g,'')}return''}
+async function getPh(c){if(c.ph!==undefined||tried.has(c.id))return;tried.add(c.id);const ws=c.en.replace(/[^\p{L}'’\- ]/gu,' ').split(' ').filter(Boolean);if(!ws.length||ws.length>4)return;
+try{const p=await Promise.all(ws.map(phWord));if(p.every(Boolean)){c.ph='/'+p.join(' ')+'/';save();if(cur===c)view()}}catch(e){lastErr=String(e&&e.message||e)}}
 const sel=(k,arr,v)=>`<select data-s="${k}">${arr.map(([a,b])=>`<option value="${esc(a)}"${a==v?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
 function drawStudy(){const s=S.set,cats=[...new Set(S.cards.map(c=>c.cat).filter(Boolean))].sort(),due=S.cards.filter(c=>c.reps&&c.due<=now()).length;
 let h=`<div class="row">${sel('mode',[['daily','Daily review'],['new','New words'],['hard','Difficult words'],['all','All words'],['fav','Favourites']],s.mode)}${sel('dir',[['mix','Mixed'],['en','English first'],['tr','Turkish first']],s.dir)}${sel('cat',[['','All categories'],...cats.map(c=>[c,c])],s.cat)}</div>`;
@@ -87,6 +87,7 @@ $('#rs').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=J
 $('#reset').onclick=()=>{if(confirm('Delete ALL words and progress on this phone? Back up first.')&&confirm('Really delete everything?')){S.cards=[];S.log={};save();build()}};
 function init(){document.querySelectorAll('#set [data-s]').forEach(i=>{const v=S.set[i.dataset.s];i.type=='checkbox'?i.checked=v:i.value=v});build()}
 init();try{navigator.storage?.persist?.()}catch(e){}if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
-$('#phall').onclick=async()=>{if(!navigator.onLine)return $('#phmsg').textContent='You are offline. Try again with internet.';const L=S.cards.filter(c=>c.ph===undefined),b=$('#phall');let i=0;b.disabled=true;
+$('#phall').onclick=async()=>{const m=$('#phmsg');m.textContent='Testing lookup…';try{const t=await phWord('hello');m.textContent=t?'Lookup works: hello = /'+t+'/. Downloading…':'Lookup reached the service but found no result for "hello".'}catch(e){return m.textContent='Lookup failed: '+(e.message||e)+'. Check internet, then try again.'}lastErr='';const L=S.cards.filter(c=>c.ph===undefined),b=$('#phall');let i=0;b.disabled=true;
 const w=async()=>{while(i<L.length){const c=L[i++];tried.delete(c.id);await getPh(c);$('#phmsg').textContent=`Checked ${i} of ${L.length}…`}};await Promise.all([w(),w(),w()]);b.disabled=false;
-$('#phmsg').textContent=`Done. ${S.cards.filter(c=>c.ph).length} of ${S.cards.length} words have pronunciation. Words not in the dictionary are skipped; you can type them in via Edit.`};
+$('#phmsg').textContent=`Done. ${S.cards.filter(c=>c.ph).length} of ${S.cards.length} words have pronunciation.${lastErr?' Some lookups failed ('+lastErr+'); tap again to retry those.':''} Words not in the dictionary are skipped; you can type them in via Edit.`};
+$('#phmsg').textContent='App version '+VER;
