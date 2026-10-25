@@ -34,21 +34,27 @@ dialog{width:92%;max-width:520px;border:1px solid var(--line);border-radius:14px
 <textarea id="paste" rows="4" placeholder="…or paste rows here (English, Turkish per row)"></textarea>
 <label><input type="checkbox" id="swap" style="width:auto"> Plain two-column file has Turkish first</label>
 <div class="row"><button class="p" id="imp">Import words</button></div><p id="msg" class="meta"></p>
-<h3>Add one word</h3><p class="meta">Type just the English word. The Turkish meanings and the English definition are looked up automatically (needs internet).</p>
-<input id="m_en" placeholder="English word or phrase"><input id="m_tr" placeholder="Turkish meaning (optional, filled in automatically)"><input id="m_ex" placeholder="Example sentence (optional)"><input id="m_exTr" placeholder="Turkish translation of example"><input id="m_cat" placeholder="Category (optional)">
-<div class="row"><button class="p" id="addone">Add word</button></div></section>
+<h3>Add one word</h3><p class="meta">Type just the English word and tap Add word. The other lines are filled in automatically (needs internet). Check them, correct anything, then tap Save changes.</p>
+<label>English word or phrase</label><input id="m_en" autocapitalize="none">
+<label>Turkish meaning</label><input id="m_tr">
+<label>English meaning</label><textarea id="m_def" rows="3"></textarea>
+<label>Synonyms</label><input id="m_syn">
+<label>Example sentence</label><input id="m_ex">
+<label>Example in Turkish</label><input id="m_exTr">
+<label>Category</label><input id="m_cat">
+<div class="row"><button class="p" id="addone">Add word</button><button id="newone">New word</button></div><p id="msg2" class="meta"></p></section>
 <section id="stats"></section>
 <section id="set"><h2>Settings</h2>
 <label>New words per day</label><input type="number" min="0" max="200" data-s="daily">
 <label>Speech speed</label><input type="range" min="0.5" max="1.2" step="0.1" data-s="rate">
 <label><input type="checkbox" data-s="auto" style="width:auto"> Say English word automatically</label>
 <div class="row"><button id="testv">🔊 Test voice</button></div><p id="vinfo" class="meta"></p>
-<h3>Pronunciation, word type and meanings</h3><p class="meta">Pronunciation, word type (noun, verb, adj.…) and the English meaning are looked up automatically as you study (needs internet once per word, then saved for offline).</p><div class="row"><button id="phall">Download for all words</button></div><p id="phmsg" class="meta"></p>
+<h3>Pronunciation, word type and meanings</h3><p class="meta">Pronunciation, word type (noun, verb, adj.…) the English meaning and synonyms are looked up automatically as you study (needs internet once per word, then saved for offline).</p><div class="row"><button id="phall">Download for all words</button></div><p id="phmsg" class="meta"></p>
 <h3>Daily reminder</h3><input type="time" id="rt" value="19:00"><div class="row"><button id="rem">Add to calendar</button></div>
 <h3>Backup</h3><div class="row"><button id="bk">Backup (.json)</button><button id="csvx">Export CSV</button></div>
 <label>Restore from backup</label><input type="file" id="rs" accept=".json,application/json">
 <h3>Danger zone</h3><div class="row"><button id="reset">Delete all words and progress</button></div></section>
-<dialog id="dlg"><h3 style="margin-top:0">Edit word</h3><label>English</label><input id="e_en"><label>Turkish</label><input id="e_tr"><label>Example</label><input id="e_ex"><label>Example in Turkish</label><input id="e_exTr"><label>Category</label><input id="e_cat"><label>Pronunciation (optional)</label><input id="e_ph" placeholder="/həˈləʊ/"><label>Word type (optional)</label><input id="e_pos" placeholder="noun, verb"><label>English meaning (optional)</label><textarea id="e_def" rows="3"></textarea>
+<dialog id="dlg"><h3 style="margin-top:0">Edit word</h3><label>English</label><input id="e_en"><label>Turkish</label><input id="e_tr"><label>Example</label><input id="e_ex"><label>Example in Turkish</label><input id="e_exTr"><label>Category</label><input id="e_cat"><label>Pronunciation (optional)</label><input id="e_ph" placeholder="/həˈləʊ/"><label>Word type (optional)</label><input id="e_pos" placeholder="noun, verb"><label>English meaning (optional)</label><textarea id="e_def" rows="3"></textarea><label>Synonyms (optional)</label><input id="e_syn" placeholder="fast, quick">
 <div class="row"><button class="p" id="sv">Save</button><button id="del">Delete</button><button id="cx">Cancel</button></div></dialog>
 <nav><button data-v="study" class="on">Study</button><button data-v="words">Words</button><button data-v="add">Add</button><button data-v="stats">Progress</button><button data-v="set">Settings</button></nav>
 <script src="app.js"></script></body></html>
