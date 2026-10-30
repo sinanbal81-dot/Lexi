@@ -24,7 +24,7 @@ small,.hint,.meta{color:var(--mut);font-size:13px}.ex{margin:10px 0 0}hr{width:6
 .k{display:grid;grid-template-columns:1fr 1fr;gap:8px}.k div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}.k b{display:block;font-size:24px}
 dialog{width:92%;max-width:520px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg)}label{font-size:13px;color:var(--mut)}
 .ph{color:var(--mut);font:18px/1.3 system-ui,sans-serif;margin-top:6px}button:disabled{opacity:.4}
-.pn{position:fixed;left:0;right:0;bottom:calc(46px + env(safe-area-inset-bottom));padding:6px 14px;background:var(--bg);z-index:5}.pn .row{max-width:612px;margin:0 auto}.pn button{padding:16px 0}.pn .p{font-weight:700}
+.pn{position:fixed;left:0;right:0;bottom:calc(46px + env(safe-area-inset-bottom));padding:6px 14px;background:var(--bg);z-index:5}.pn .row{max-width:612px;margin:0 auto}.pn button{padding:16px 0}.pn .p{font-weight:700}.def{color:var(--mut);font:16px/1.4 system-ui,sans-serif;margin-top:10px;padding:0 8px}.ph i{font-style:italic}
 </style></head><body>
 <section id="study" class="on"></section>
 <section id="words"><h2>Words</h2><input id="q" type="search" placeholder="Search English, Turkish or category"><div id="wl"></div></section>
@@ -36,7 +36,8 @@ dialog{width:92%;max-width:520px;border:1px solid var(--line);border-radius:14px
 <label><input type="checkbox" id="swap" style="width:auto"> Plain two-column file has Turkish first</label>
 <div class="row"><button class="p" id="imp">Import words</button></div><p id="msg" class="meta"></p>
 <h3>Add one word</h3>
-<input id="m_en" placeholder="English word or phrase"><input id="m_tr" placeholder="Turkish meaning"><input id="m_ex" placeholder="Example sentence (optional)"><input id="m_exTr" placeholder="Turkish translation of example"><input id="m_cat" placeholder="Category (optional)">
+<p class="meta">Type an English word and tap Add word. The other lines fill in from the web so you can check them. Tap Add word again to save.</p>
+<input id="m_en" placeholder="English word or phrase"><input id="m_tr" placeholder="Turkish meanings (filled automatically)"><input id="m_pos" placeholder="Part of speech (noun, verb, adj…)"><input id="m_def" placeholder="English meaning"><input id="m_ex" placeholder="Example sentence (optional)"><input id="m_exTr" placeholder="Turkish translation of example"><input id="m_cat" placeholder="Category (optional)">
 <div class="row"><button class="p" id="addone">Add word</button></div></section>
 <section id="stats"></section>
 <section id="set"><h2>Settings</h2>
@@ -44,12 +45,12 @@ dialog{width:92%;max-width:520px;border:1px solid var(--line);border-radius:14px
 <label>Speech speed</label><input type="range" min="0.5" max="1.2" step="0.1" data-s="rate">
 <label><input type="checkbox" data-s="auto" style="width:auto"> Say English word automatically</label>
 <div class="row"><button id="testv">🔊 Test voice</button></div><p id="vinfo" class="meta"></p>
-<h3>Pronunciation</h3><p class="meta">Looked up automatically as you study (needs internet once per word, then saved for offline).</p><div class="row"><button id="phall">Download for all words</button></div><p id="phmsg" class="meta"></p>
+<h3>Pronunciation</h3><p class="meta">Pronunciation, part of speech and English meaning are looked up automatically as you study (needs internet once per word, then saved for offline).</p><div class="row"><button id="phall">Download for all words</button></div><p id="phmsg" class="meta"></p>
 <h3>Daily reminder</h3><input type="time" id="rt" value="19:00"><div class="row"><button id="rem">Add to calendar</button></div>
 <h3>Backup</h3><div class="row"><button id="bk">Backup (.json)</button><button id="csvx">Export CSV</button></div>
 <label>Restore from backup</label><input type="file" id="rs" accept=".json,application/json">
 <h3>Danger zone</h3><div class="row"><button id="reset">Delete all words and progress</button></div></section>
-<dialog id="dlg"><h3 style="margin-top:0">Edit word</h3><label>English</label><input id="e_en"><label>Turkish</label><input id="e_tr"><label>Example</label><input id="e_ex"><label>Example in Turkish</label><input id="e_exTr"><label>Category</label><input id="e_cat"><label>Pronunciation (optional)</label><input id="e_ph" placeholder="/həˈləʊ/">
+<dialog id="dlg"><h3 style="margin-top:0">Edit word</h3><label>English</label><input id="e_en"><label>Turkish</label><input id="e_tr"><label>Example</label><input id="e_ex"><label>Example in Turkish</label><input id="e_exTr"><label>Category</label><input id="e_cat"><label>Part of speech</label><input id="e_pos" placeholder="noun, verb, adj…"><label>English meaning</label><input id="e_def"><label>Pronunciation (optional)</label><input id="e_ph" placeholder="/həˈləʊ/">
 <div class="row"><button class="p" id="sv">Save</button><button id="del">Delete</button><button id="cx">Cancel</button></div></dialog>
 <nav><button data-v="study" class="on">Study</button><button data-v="words">Words</button><button data-v="add">Add</button><button data-v="stats">Progress</button><button data-v="set">Settings</button></nav>
 <script src="app.js"></script></body></html>
