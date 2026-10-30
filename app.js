@@ -28,7 +28,7 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='7';
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='8';
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
@@ -51,8 +51,9 @@ if(!S.cards.length)h+='<p class="empty">No words yet. Open Add to import your Go
 else if(!cur)h+=`<p class="empty">All done for this set. Words due now: ${due}.<br>Try another mode above.</p>${hi>=0?'<div class="row"><button data-nav="prev">‹ Previous</button></div>':''}`;
 else{const c=cur,f=rev?c.tr:c.en,b=rev?c.en:c.tr;
 h+=`<div class="card" id="card"><small>${rev?'Turkish → English':'English → Turkish'}, ${Q.length} more after this</small><div class="big">${esc(f)||'(empty)'}</div>${!rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${flip?`<hr><div class="big2">${esc(b)||'(no translation)'}</div>${rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${c.ex?`<p class="ex">${esc(c.ex)}<br><i>${esc(c.exTr)}</i></p>`:''}<p class="ex"><a target="_blank" rel="noopener" href="https://tatoeba.org/en/sentences/search?from=eng&to=tur&query=${encodeURIComponent(c.en)}">Find example sentences</a> or <a href="#" data-edit="${c.id}">${c.ex?'edit yours':'add your own'}</a></p>`:'<p class="hint">Tap to reveal</p>'}</div>
+<div class="row3"${flip?'':' style="visibility:hidden"'}><button class="again" data-r="again">Again</button><button class="hard" data-r="hard">Hard</button><button class="easy" data-r="easy">Easy</button></div>
 <div class="row"><button data-edit="${c.id}">✎ Edit</button><button data-fav="${c.id}">${c.fav?'★ Favourite':'☆ Favourite'}</button><button id="spk">🔊 Listen</button></div>`;
-h+=`<div class="row3"${flip?'':' style="visibility:hidden"'}><button class="again" data-r="again">Again</button><button class="hard" data-r="hard">Hard</button><button class="easy" data-r="easy">Easy</button></div><div class="row"><button data-nav="prev"${hi>0?'':' disabled'}>‹ Previous</button><button data-nav="next">Next ›</button></div>`}
+h+=`<div style="height:70px"></div><div class="pn"><div class="row"><button data-nav="prev"${hi>0?'':' disabled'}>‹ Previous</button><button data-nav="next">Next ›</button></div></div>`}
 $('#study').innerHTML=h}
 function drawWords(){const q=$('#q').value.toLowerCase(),L=S.cards.filter(c=>(c.en+' '+c.tr+' '+c.cat).toLowerCase().includes(q)).sort((a,b)=>a.en.localeCompare(b.en));
 $('#wl').innerHTML=`<p class="meta">${L.length} of ${S.cards.length} words${L.length>200?' (showing 200, search to narrow)':''}</p>`+L.slice(0,200).map(c=>`<div class="w" data-edit="${c.id}"><div><b>${esc(c.en)}</b><br>${esc(c.tr)}</div><div class="meta">${c.fav?'★ ':''}${esc(c.cat)}</div></div>`).join('')}
