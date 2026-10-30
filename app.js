@@ -28,7 +28,7 @@ c.reps++;save()}
 /*END*/
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),byId=i=>S.cards.find(c=>c.id==i);
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='8';
+let Q=[],cur=null,flip=false,rev=false,H=[],hi=-1;const tried=new Set();let lastErr='';const VER='9';
 function say(t){if(!window.speechSynthesis)return alert('Speech is not available in this browser.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),vs=speechSynthesis.getVoices(),n=v=>v.lang.replace('_','-');
 u.voice=vs.find(v=>n(v)=='en-AU')||vs.find(v=>/^en-(GB|NZ|US)/.test(n(v)))||vs.find(v=>/^en/.test(n(v)))||null;u.lang=u.voice?n(u.voice):'en-AU';u.rate=S.set.rate;speechSynthesis.speak(u);return u.voice}
 function dl(n,t,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type}));a.download=n;a.click()}
@@ -53,7 +53,7 @@ else{const c=cur,f=rev?c.tr:c.en,b=rev?c.en:c.tr;
 h+=`<div class="card" id="card"><small>${rev?'Turkish → English':'English → Turkish'}, ${Q.length} more after this</small><div class="big">${esc(f)||'(empty)'}</div>${!rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${flip?`<hr><div class="big2">${esc(b)||'(no translation)'}</div>${rev&&c.ph?`<div class="ph">${esc(c.ph)}</div>`:''}${c.ex?`<p class="ex">${esc(c.ex)}<br><i>${esc(c.exTr)}</i></p>`:''}<p class="ex"><a target="_blank" rel="noopener" href="https://tatoeba.org/en/sentences/search?from=eng&to=tur&query=${encodeURIComponent(c.en)}">Find example sentences</a> or <a href="#" data-edit="${c.id}">${c.ex?'edit yours':'add your own'}</a></p>`:'<p class="hint">Tap to reveal</p>'}</div>
 <div class="row3"${flip?'':' style="visibility:hidden"'}><button class="again" data-r="again">Again</button><button class="hard" data-r="hard">Hard</button><button class="easy" data-r="easy">Easy</button></div>
 <div class="row"><button data-edit="${c.id}">✎ Edit</button><button data-fav="${c.id}">${c.fav?'★ Favourite':'☆ Favourite'}</button><button id="spk">🔊 Listen</button></div>`;
-h+=`<div style="height:70px"></div><div class="pn"><div class="row"><button data-nav="prev"${hi>0?'':' disabled'}>‹ Previous</button><button data-nav="next">Next ›</button></div></div>`}
+h+=`<div style="height:170px"></div><div class="pn">${flip?'':'<div class="row"><button id="rvl" class="p">Tap to reveal</button></div>'}<div class="row"><button data-nav="prev"${hi>0?'':' disabled'}>‹ Previous</button><button data-nav="next">Next ›</button></div></div>`}
 $('#study').innerHTML=h}
 function drawWords(){const q=$('#q').value.toLowerCase(),L=S.cards.filter(c=>(c.en+' '+c.tr+' '+c.cat).toLowerCase().includes(q)).sort((a,b)=>a.en.localeCompare(b.en));
 $('#wl').innerHTML=`<p class="meta">${L.length} of ${S.cards.length} words${L.length>200?' (showing 200, search to narrow)':''}</p>`+L.slice(0,200).map(c=>`<div class="w" data-edit="${c.id}"><div><b>${esc(c.en)}</b><br>${esc(c.tr)}</div><div class="meta">${c.fav?'★ ':''}${esc(c.cat)}</div></div>`).join('')}
@@ -64,14 +64,15 @@ $('#stats').innerHTML=`<h2>Progress</h2><div class="k"><div><b>${t.n}</b>reviewe
 function tab(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==v));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==v));view()}
 function view(){const v=$('section.on').id;v=='study'?drawStudy():v=='words'?drawWords():v=='stats'?drawStats():0}
 let eid=null;function edit(id){const c=byId(id);if(!c)return;eid=id;for(const f of['en','tr','ex','exTr','cat'])$('#e_'+f).value=c[f];$('#e_ph').value=c.ph||'';$('#dlg').showModal()}
-document.addEventListener('click',e=>{const el=e.target.closest('[data-nav],[data-r],[data-fav],[data-edit],[data-v],#card,#spk'),d=el&&el.dataset;if(!el)return;
+document.addEventListener('click',e=>{const el=e.target.closest('[data-nav],[data-r],[data-fav],[data-edit],[data-v],#card,#spk,#rvl'),d=el&&el.dataset;if(!el)return;
 if(d.v)return tab(d.v);
 if(d.nav)return d.nav=='prev'?prev():next();
 if(d.r){rate(cur,d.r);if(d.r=='again')Q.push(cur);return next()}
 if(d.fav){const c=byId(d.fav);c.fav^=1;save();return view()}
 if(d.edit){e.preventDefault();return edit(d.edit)}
 if(el.id=='spk')return say(cur.en+(flip&&cur.ex?'. '+cur.ex:''));
-if(el.id=='card'&&!flip&&!e.target.closest('a')){flip=true;if(cur.rv!==day()){(S.log[day()]??={n:0,ok:0,new:0}).n++;cur.rv=day();save()}drawStudy();if(rev&&S.set.auto)say(cur.en)}});
+if(el.id=='rvl'||(el.id=='card'&&!e.target.closest('a')))reveal()});
+function reveal(){if(!cur||flip)return;flip=true;if(cur.rv!==day()){(S.log[day()]??={n:0,ok:0,new:0}).n++;cur.rv=day();save()}drawStudy();if(rev&&S.set.auto)say(cur.en)}
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.s;if(!k)return;S.set[k]=t.type=='checkbox'?t.checked:(t.type=='number'||t.type=='range')?+t.value:t.value;save();if(['mode','dir','cat','daily'].includes(k))build()});
 $('#q').oninput=drawWords;
 $('#sv').onclick=()=>{const c=byId(eid);for(const f of['en','tr','ex','exTr','cat'])c[f]=nk($('#e_'+f).value);const p=nk($('#e_ph').value);if(p)c.ph=p;else delete c.ph;save();$('#dlg').close();view()};
